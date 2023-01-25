@@ -1,8 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import Http404, HttpResponseNotFound, HttpResponseRedirect
 from django.urls import reverse
 from django.template.loader import render_to_string
 from datetime import date
+from .models import Post
 
 
 # posts = {
@@ -87,18 +88,21 @@ posts = [
 ]
 
 def get_date(post):
-    return post['date']
+    return post.date
 
 # Create your views here.
 
 def starting_page(request):
-    sorted_posts = sorted(posts, key=get_date)
-    latest_posts = sorted_posts[-3:]
+    # posts = Post.objects.all()
+    # sorted_posts = sorted(posts, key=get_date)
+    # latest_posts = sorted_posts[-3:]
+    latest_posts = Post.objects.all().order_by('-date')[:3]
     return render(request, 'blog/index.html', {
         "posts": latest_posts
     })
 
 def all_posts(request):
+    posts = Post.objects.all()
     # posts_titles = list(posts.keys())
 
     return render(request, 'blog/all-posts.html', {
@@ -106,7 +110,10 @@ def all_posts(request):
     })
 
 def show_post(request, slug):
-    identified_post = next(post for post in posts if post['slug'] == slug)
+    # posts = Post.objects.all()
+    # identified_post = next(post for post in posts if post.slug == slug)
+    identified_post  = get_object_or_404(Post, slug=slug)
     return render(request, 'blog/post-detail.html', {
-        "post": identified_post
+        "post": identified_post,
+        "post_tags": identified_post.tag.all(),
     })
