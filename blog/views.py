@@ -2,7 +2,10 @@ from django.shortcuts import render, get_object_or_404
 from django.http import Http404, HttpResponseNotFound, HttpResponseRedirect
 from django.urls import reverse
 from django.template.loader import render_to_string
+from django.views.generic.base import TemplateView
+from django.views.generic import ListView, DetailView
 from datetime import date
+
 from .models import Post
 
 
@@ -101,6 +104,16 @@ def starting_page(request):
         "posts": latest_posts
     })
 
+class StartingPageView(TemplateView):
+    template_name = "blog/index.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        latest_posts = Post.objects.all().order_by('-date')[:3]
+        context["posts"] = latest_posts
+        return context
+    
+
 def all_posts(request):
     posts = Post.objects.all()
     # posts_titles = list(posts.keys())
@@ -108,6 +121,12 @@ def all_posts(request):
     return render(request, 'blog/all-posts.html', {
         'all_posts': posts,
     })
+
+class AllPostsView(ListView):
+    template_name = "blog/all-posts.html"
+    model = Post
+    context_object_name = "all_posts"
+
 
 def show_post(request, slug):
     # posts = Post.objects.all()
@@ -117,3 +136,15 @@ def show_post(request, slug):
         "post": identified_post,
         "post_tags": identified_post.tag.all(),
     })
+
+class ShowPostView(DetailView):
+    model = Post
+    template_name = 'blog/post-detail.html'
+    context_object_name = 'post'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post_tags'] = self.object.tag.all()
+        return context
