@@ -25,11 +25,12 @@ class Post(models.Model):
     excerpt = models.CharField(max_length=200)
     slug = models.SlugField(default="", unique=True, blank=True, null=False, db_index=True)
     date = models.DateField(auto_now=True)
-    image_name = models.CharField(max_length=100)
+    # image_name = models.CharField(max_length=100)
     content = models.TextField()
     author = models.ForeignKey(
         Author, on_delete=models.CASCADE, null=True, related_name='posts')
     tag = models.ManyToManyField(Tag)
+    image = models.ImageField(upload_to="posts", null=True)
 
     # def save(self, *args, **kwargs):
     #     self.slug = slugify(self.title)
