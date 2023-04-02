@@ -3,10 +3,13 @@ from django.http import Http404, HttpResponseNotFound, HttpResponseRedirect
 from django.urls import reverse
 from django.template.loader import render_to_string
 from django.views.generic.base import TemplateView
+from django.views.generic.edit import FormMixin
 from django.views.generic import ListView, DetailView
+from django.views import View
 from datetime import date
 
-from .models import Post
+from .models import Post, Comment
+from .forms import CommentForm
 
 
 # posts = {
@@ -138,14 +141,45 @@ def show_post(request, slug):
         "post_tags": identified_post.tag.all(),
     })
 
-class ShowPostView(DetailView):
+class ShowPostView(View):
     model = Post
     template_name = 'blog/post-detail.html'
     context_object_name = 'post'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
+    # form_class = CommentForm
+    # success_url = 'blog/post-detail.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['post_tags'] = self.object.tag.all()
-        return context
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     context['post_tags'] = self.object.tag.all()
+    #     context['comment_form'] = CommentForm()
+    #     return context
+    
+    def get(self, request, slug):
+        post = Post.objects.get(slug=slug)
+        context = {
+            "post": post,
+            "post_tags": post.tag.all(),
+            "comment_form": CommentForm(),
+            "comments": post.comments.all().order_by("-id"),
+        }
+        return render(request, "blog/post-detail.html", context)
+
+    def post(self, request, slug):
+        form = CommentForm(request.POST)
+        post = Post.objects.get(slug=slug)
+
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.save()
+            return HttpResponseRedirect(reverse("post-detail-page", args=[slug]))
+
+        context = {
+            "post": post,
+            "post_tags": post.tag.all(),
+            "comment_form": form,
+            "comments": post.comments.all().order_by("-id"),
+        }
+        return render(request, "blog/post-detail.html", context)
