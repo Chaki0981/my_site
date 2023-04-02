@@ -5,7 +5,6 @@
     <link rel="stylesheet" href="{% static "blog/post.css" %}">
     <link rel="stylesheet" href="{% static "blog/all-posts.css" %}"/>
 {% endblock %}
-%}
 
 {% block content%}
     <section id="all-posts">
@@ -13,7 +12,7 @@
 
         <ul>
             {% for post in all_posts %}
-                {% include 'blog/includes/post.html'%}
+                {% include "blog/includes/post.html"%}
             {% endfor %}
         </ul>
     </section>
